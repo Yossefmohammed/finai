@@ -1,0 +1,51 @@
+# FinAI — Requirements (Python 3.9+, 3.11+)
+# Versions taken from a verified working install
+
+# Core API
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.12
+
+# Database
+sqlalchemy==2.0.35
+
+# Data
+pandas==2.2.3
+
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+
+# AI direct APIs
+anthropic==0.40.0
+openai==1.55.0
+httpx==0.27.2
+aiohttp==3.10.10
+
+# LangChain — verified compatible set
+langchain==0.3.30
+langchain-core==0.3.86
+langchain-anthropic==0.3.0
+langchain-openai==0.2.11
+langchain-groq==0.3.8
+langchain-community==0.3.31
+langchain-text-splitters==0.3.11
+langsmith==0.4.37
+
+# LangGraph — verified compatible set
+langgraph==0.6.11
+langgraph-checkpoint==2.1.2
+langgraph-prebuilt==0.6.5
+langgraph-sdk==0.2.9
+
+# Gemini
+langchain-google-genai==2.0.10
+google-generativeai==0.8.6
+
+# Ollama
+langchain-ollama==0.3.10
+
+# Pydantic
+pydantic>=2.7.0
+pydantic-settings>=2.0.0
