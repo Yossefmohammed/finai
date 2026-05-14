@@ -58,14 +58,38 @@ def _categorize(desc: str) -> tuple[str, str]:
                 return cat, txtype
     return "Other", "expense"
 
+def _detect_data_type(df: pd.DataFrame) -> str:
+    """Detect if CSV is transaction data or customer data."""
+    cols_lower = [c.lower() for c in df.columns]
+    
+    # Transaction indicators
+    transaction_keywords = ["amount", "مبلغ", "debit", "credit", "expense", "income", "transaction"]
+    # Customer indicators
+    customer_keywords = ["customer", "client", "email", "phone", "company", "name", "first name", "last name"]
+    
+    transaction_score = sum(1 for kw in transaction_keywords if any(kw in col for col in cols_lower))
+    customer_score = sum(1 for kw in customer_keywords if any(kw in col for col in cols_lower))
+    
+    if transaction_score > customer_score:
+        return "transaction"
+    elif customer_score > transaction_score:
+        return "customer"
+    else:
+        # Ambiguous, check for numeric columns (transactions usually have amounts)
+        numeric_cols = sum(1 for col in df.columns if pd.api.types.is_numeric_dtype(df[col]))
+        if numeric_cols >= 2:  # Likely transaction if multiple numbers
+            return "transaction"
+        return "unknown"
+
+
 def _detect_columns(df: pd.DataFrame) -> dict:
     """Heuristically detect which column is date / description / amount."""
     mapping = {}
     cols_lower = {c.lower(): c for c in df.columns}
 
     for key, candidates in {
-        "date":   ["date", "تاريخ", "datum", "fecha", "data"],
-        "desc":   ["description", "details", "narration", "وصف", "البيان", "particulars", "memo"],
+        "date":   ["date", "تاريخ", "datum", "fecha", "data", "subscription date"],
+        "desc":   ["description", "details", "narration", "وصف", "البيان", "particulars", "memo", "company", "customer id"],
         "amount": ["amount", "مبلغ", "debit", "credit", "value", "القيمة"],
         "type":   ["type", "نوع", "transaction type"],
         "category": ["category", "فئة", "الفئة"],
@@ -103,6 +127,12 @@ def parse_csv(contents: bytes, db: Session, user_id: int = 0) -> dict:
     """Parse CSV bytes, auto-detect columns, insert transactions, return summary."""
     df = pd.read_csv(io.BytesIO(contents), encoding="utf-8-sig")
     df.columns = df.columns.str.strip()
+
+    data_type = _detect_data_type(df)
+    if data_type == "customer":
+        raise ValueError("This appears to be customer data, not financial transactions. Please upload a CSV with transaction data (columns like: date, description, amount, type).")
+    elif data_type == "unknown":
+        raise ValueError("Unable to determine if this is transaction data. Please ensure your CSV has columns like 'date', 'description', 'amount'.")
 
     cols = _detect_columns(df)
     if "amount" not in cols:

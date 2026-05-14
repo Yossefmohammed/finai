@@ -127,3 +127,49 @@ def list_providers():
         {"id": "gemini",  "name": "Gemini 1.5 (Google)",   "free": True,  "key_url": "https://aistudio.google.com/apikey"},
         {"id": "ollama",  "name": "Ollama (Local)",         "free": True,  "key_url": "https://ollama.com"},
     ]}
+
+
+# ── Export endpoints ──────────────────────────────────────────────────────────
+from fastapi.responses import StreamingResponse
+import io
+
+@router.get("/export/pdf")
+def export_pdf(
+    period: str = "all",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download a professional PDF financial report."""
+    from app.services.report_service import generate_pdf
+    try:
+        pdf_bytes = generate_pdf(db, current_user.id,
+                                  current_user.business_name, period)
+        filename = f"FinAI_Report_{current_user.business_name}_{period}.pdf"
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/export/excel")
+def export_excel(
+    period: str = "all",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download a professional Excel financial workbook."""
+    from app.services.report_service import generate_excel
+    try:
+        excel_bytes = generate_excel(db, current_user.id,
+                                      current_user.business_name, period)
+        filename = f"FinAI_Report_{current_user.business_name}_{period}.xlsx"
+        return StreamingResponse(
+            io.BytesIO(excel_bytes),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

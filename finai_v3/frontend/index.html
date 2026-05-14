@@ -276,6 +276,8 @@
       <div class="header-actions">
         <button class="icon-btn" onclick="clearChat()">محادثة جديدة</button>
         <button class="icon-btn" onclick="showDashboard()">📊 لوحة التحكم</button>
+        <button class="icon-btn" onclick="exportReport('pdf')" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#ef4444">📄 PDF</button>
+        <button class="icon-btn" onclick="exportReport('excel')" style="background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#22c55e">📊 Excel</button>
       </div>
     </div>
 
@@ -497,6 +499,43 @@ async function uploadCSV(event) {
     } else showToast('❌ ' + (data.detail || 'Upload failed'), 'error');
   } catch { showToast('❌ تعذر الاتصال بالخادم', 'error'); }
   event.target.value = '';
+}
+
+
+// ── Export reports ────────────────────────────────────────────────────────────
+async function exportReport(type) {
+  const token = getToken();
+  if (!token) { showToast('يجب تسجيل الدخول أولاً', 'error'); return; }
+
+  const periodSelect = document.getElementById('export-period')?.value || 'all';
+  showToast(type === 'pdf' ? '📄 جارٍ إنشاء PDF...' : '📊 جارٍ إنشاء Excel...');
+
+  try {
+    const res = await fetch(`${API}/api/export/${type}?period=${periodSelect}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      showToast('❌ ' + (err.detail || 'Export failed'), 'error');
+      return;
+    }
+
+    // Trigger browser download
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const user = getUser();
+    a.href     = url;
+    a.download = `FinAI_${user.business_name || 'Report'}_${type === 'pdf' ? '.pdf' : '.xlsx'}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(type === 'pdf' ? '✅ PDF downloaded!' : '✅ Excel downloaded!', 'success');
+  } catch (e) {
+    showToast('❌ تعذر تحميل التقرير', 'error');
+  }
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
