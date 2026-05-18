@@ -1,0 +1,54 @@
+# ── Secrets & Environment ──────────────────────
+.env
+*.env
+.env.*
+!.env.example
+
+# ── Python ─────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.wheel
+
+# ── Virtual Environments ───────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Database ───────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── IDE / Editor ───────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing & Coverage ─────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── Logs ───────────────────────────────────────
+*.log
+logs/
+
+# ── Exports (generated files, not source) ──────
+exports/
+*.pdf
+*.xlsx
+!sample_transactions.csv
+!customers-100.csv

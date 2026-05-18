@@ -1,127 +1,246 @@
 # FinAI v3
 
-FinAI v3 is a bilingual AI financial assistant built with FastAPI, SQLAlchemy, and LangChain/LangGraph. It supports multi-tenant transaction tracking, CSV upload, authenticated user access, financial summaries, and PDF/Excel export.
+![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi)
+![LangChain](https://img.shields.io/badge/LangChain-LangGraph-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+
+**FinAI v3** is a bilingual AI-powered financial assistant. It supports multi-tenant transaction tracking, CSV upload, JWT authentication, financial summaries, AI chat, and PDF/Excel report export.
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Quick Start (Docker)](#quick-start-docker)
+- [Manual Setup](#manual-setup)
+- [Environment Variables](#environment-variables)
+- [API Reference](#api-reference)
+- [CSV Format](#csv-format)
+- [Running Tests](#running-tests)
+- [Deployment](#deployment)
+- [License](#license)
+
+---
+
+## Features
+
+- User registration and JWT authentication
+- CSV upload for bulk transaction import
+- AI chat interface (Anthropic, OpenAI, Groq, Gemini, Ollama)
+- Transaction CRUD with per-user data isolation
+- Dashboard summary — income, expenses, profit, top categories
+- Export reports as PDF or Excel
+- Bilingual support (Arabic & English)
+
+---
 
 ## Project Structure
 
-- `finai_v3/`
-  - `backend/` - FastAPI backend API, authentication, database models, AI agent, CSV import, and report generation.
-  - `frontend/` - Static HTML UI for the financial assistant and authentication.
-- `customers-100.csv` - Example customer list data (not a transaction CSV).
-- `sample_transactions.csv` - A sample transaction CSV file that matches the expected import format.
-
-## Key Features
-
-- User registration and JWT authentication
-- CSV upload for transaction import
-- AI chat interface powered by LangChain/LangGraph and multiple providers
-- Transaction listing, adding, and clearing for the authenticated user
-- Dashboard summary with income, expenses, profit, and top categories
-- Export reports to PDF or Excel
-
-## Backend Overview
-
-The backend is located in `finai_v3_auth/finai_v3/backend`.
-
-- `main.py` - FastAPI application entrypoint
-- `app/models/database.py` - SQLAlchemy models and DB setup
-- `app/auth/core.py` - JWT and password handling
-- `app/auth/router.py` - registration, login, profile, and account routes
-- `app/routers/api.py` - protected financial API routes
-- `app/services/csv_service.py` - CSV parsing and transaction import
-- `app/services/agent.py` - AI agent integration
-- `app/tools/financial_tools.py` - analytics and tool implementations
-
-## Installation
-
-1. Navigate to the backend folder:
-
-```bash
-cd /home/user2/Desktop/my-work/finai_v3_auth/finai_v3/backend
+```
+finai/
+├── finai_v3/
+│   ├── backend/
+│   │   ├── main.py                  # FastAPI entry point
+│   │   ├── requirements.txt
+│   │   └── app/
+│   │       ├── auth/
+│   │       │   ├── core.py          # JWT & password utilities
+│   │       │   └── router.py        # Auth endpoints
+│   │       ├── models/
+│   │       │   └── database.py      # SQLAlchemy models & DB setup
+│   │       ├── routers/
+│   │       │   └── api.py           # Protected financial API routes
+│   │       ├── services/
+│   │       │   ├── csv_service.py   # CSV parsing & import
+│   │       │   └── agent.py         # AI agent integration
+│   │       └── tools/
+│   │           └── financial_tools.py
+│   └── frontend/
+│       ├── index.html               # Main UI
+│       └── auth.html                # Login / register page
+├── tests/                           # pytest test suite
+├── sample_transactions.csv
+├── customers-100.csv
+├── .env.example
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+└── LICENSE
 ```
 
-2. Install dependencies:
+---
+
+## Quick Start (Docker)
+
+**Requirements:** [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 
 ```bash
+# 1. Clone the repo
+git clone https://github.com/Yossefmohammed/finai.git
+cd finai
+
+# 2. Create your .env file
+cp .env.example .env
+# Open .env and fill in JWT_SECRET_KEY and your AI provider keys
+
+# 3. Start everything
+docker compose up --build
+
+# Backend → http://localhost:8000
+# Frontend → http://localhost:3000
+# API docs → http://localhost:8000/docs
+```
+
+---
+
+## Manual Setup
+
+### Backend
+
+```bash
+# Navigate to backend
+cd finai_v3/backend
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-```
 
-3. Initialize the database:
+# Copy and configure environment variables
+cp ../../.env.example ../../.env
+# Edit .env and set JWT_SECRET_KEY and AI provider keys
 
-```bash
-python -c "from app.models.database import init_db; init_db()"
-```
-
-## Running the API
-
-Start the FastAPI server from the backend folder:
-
-```bash
+# Start the API server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`.
+### Frontend
 
-## Authentication
+Open `finai_v3/frontend/index.html` directly in your browser, or serve it:
 
-The backend uses JWT authentication.
+```bash
+cd finai_v3/frontend
+python -m http.server 3000
+```
 
-### Endpoints
+---
 
-- `POST /auth/register` - Create a new user account
-- `POST /auth/login` - Obtain JWT token
-- `GET /auth/me` - Get current user profile
-- `PUT /auth/update` - Update business name or password
-- `DELETE /auth/account` - Delete user account and all data
+## Environment Variables
 
-## Financial API
+Copy `.env.example` to `.env` and set the following:
 
-These routes require an authenticated user and the access token in the `Authorization: Bearer <token>` header.
+| Variable | Required | Description |
+|---|---|---|
+| `JWT_SECRET_KEY` | ✅ Yes | Strong random secret for signing JWTs |
+| `JWT_ALGORITHM` | No | Default: `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Default: `60` |
+| `DATABASE_URL` | No | Default: `sqlite:///./finai.db` |
+| `ANTHROPIC_API_KEY` | If using Claude | Your Anthropic API key |
+| `OPENAI_API_KEY` | If using GPT | Your OpenAI API key |
+| `GROQ_API_KEY` | If using Groq | Your Groq API key |
+| `GEMINI_API_KEY` | If using Gemini | Your Google Gemini API key |
+| `ALLOWED_ORIGINS` | No | Comma-separated CORS origins |
+| `APP_ENV` | No | `development` or `production` |
 
-- `POST /api/upload` - Upload a transaction CSV file
-- `POST /api/chat` - Ask AI questions about your financial data
-- `GET /api/transactions` - List transactions for the logged-in user
-- `POST /api/transactions` - Add a new transaction manually
-- `DELETE /api/transactions` - Delete all transactions for the user
-- `GET /api/stats` - Get dashboard summary
-- `GET /api/providers` - List supported AI providers
-- `GET /api/export/pdf` - Download a PDF financial report
-- `GET /api/export/excel` - Download an Excel financial report
+> Generate a secure JWT secret with:
+> ```bash
+> python -c "import secrets; print(secrets.token_hex(32))"
+> ```
+
+---
+
+## API Reference
+
+### Auth Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/auth/register` | Create a new user account |
+| `POST` | `/auth/login` | Obtain a JWT access token |
+| `GET` | `/auth/me` | Get current user profile |
+| `PUT` | `/auth/update` | Update business name or password |
+| `DELETE` | `/auth/account` | Delete account and all data |
+
+### Financial Endpoints (require `Authorization: Bearer <token>`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/upload` | Upload a transaction CSV file |
+| `POST` | `/api/chat` | Ask AI questions about your finances |
+| `GET` | `/api/transactions` | List all transactions |
+| `POST` | `/api/transactions` | Add a transaction manually |
+| `DELETE` | `/api/transactions` | Delete all transactions |
+| `GET` | `/api/stats` | Dashboard summary |
+| `GET` | `/api/providers` | List supported AI providers |
+| `GET` | `/api/export/pdf` | Download PDF report |
+| `GET` | `/api/export/excel` | Download Excel report |
+
+Interactive API docs are available at `http://localhost:8000/docs` in development mode.
+
+---
 
 ## CSV Format
 
-The expected transaction CSV should include columns similar to:
-
-- `Date`
-- `Description`
-- `Amount`
-- `Type`
-- `Category`
-
-Example row:
+Upload transactions using a CSV with these columns:
 
 ```csv
 Date,Description,Amount,Type,Category
 2024-01-01,Salary Deposit,5000.00,income,Income
+2024-01-05,Office Rent,1200.00,expense,Housing
 ```
 
-> Note: `customers-100.csv` is customer contact data, not financial transactions. It cannot be imported as transaction data.
+> **Note:** `customers-100.csv` is example contact data — it cannot be used as a transaction file.
 
-## Frontend
+A ready-to-use sample is included at `sample_transactions.csv`.
 
-The frontend static files are in `finai_v3_auth/finai_v3/frontend`.
+---
 
-- `index.html` - Main UI
-- `auth.html` - Authentication page
+## Running Tests
 
-You can open these files directly in the browser or serve them from a simple static server.
+```bash
+# From the project root
+pip install pytest httpx
 
-## Notes
+pytest
+```
 
-- The SQLite database file is `finai.db` in the backend folder.
-- The default JWT secret is hardcoded in `app/auth/core.py`. For production, replace it with a secure environment variable.
-- The project is configured to work with several AI providers, including Anthropic, OpenAI, Groq, Gemini, and Ollama.
+Tests use an in-memory SQLite database and a throwaway JWT secret — no `.env` required.
+
+---
+
+## Deployment
+
+### Render (free tier)
+
+1. Push your repo to GitHub.
+2. Go to [render.com](https://render.com) → New Web Service.
+3. Set **Build Command:** `pip install -r finai_v3/backend/requirements.txt`
+4. Set **Start Command:** `cd finai_v3/backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add all environment variables from `.env.example` in the Render dashboard.
+
+### Railway
+
+```bash
+npm install -g @railway/cli
+railway login
+railway up
+```
+Set env vars via `railway variables set JWT_SECRET_KEY=...`
+
+### Production Database
+
+For production, switch from SQLite to PostgreSQL by setting:
+```
+DATABASE_URL=postgresql://user:password@host:5432/finai_db
+```
+
+---
 
 ## License
 
-This repository does not include a license file. Add one as needed for your project.
+This project is licensed under the [MIT License](LICENSE).
